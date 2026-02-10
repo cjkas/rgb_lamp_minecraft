@@ -60,8 +60,17 @@ void Error_Handler(void);
 
 /* Private defines -----------------------------------------------------------*/
 #define LED_CNT 59
+#define EMBEDDED_LED_Pin GPIO_PIN_4
+#define EMBEDDED_LED_GPIO_Port GPIOA
+#define BOOST_Pin GPIO_PIN_5
+#define BOOST_GPIO_Port GPIOA
 #define RGB_LED_Pin GPIO_PIN_6
 #define RGB_LED_GPIO_Port GPIOA
+#define MOSFET_5V_Pin GPIO_PIN_7
+#define MOSFET_5V_GPIO_Port GPIOA
+#define TSWITCH_Pin GPIO_PIN_1
+#define TSWITCH_GPIO_Port GPIOB
+#define TSWITCH_EXTI_IRQn EXTI0_1_IRQn
 
 /* USER CODE BEGIN Private defines */
 

@@ -93,6 +93,7 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
     }
 
 }
+volatile uint8_t mode = 3;
 /* USER CODE END 0 */
 
 /**
@@ -140,10 +141,48 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  uint32_t now = 0, next_blink = 500, next_tick = 1000, loop_count = 0;
+  uint32_t now = 0, next_blink = 500, next_tick = 1000, loop_count = 0, next_ping = 0;
 
   while (1)
   {
+
+
+	  if(mode == 1) {
+		  HAL_GPIO_WritePin(EMBEDDED_LED_GPIO_Port, EMBEDDED_LED_Pin, GPIO_PIN_SET);
+		  HAL_GPIO_WritePin(MOSFET_5V_GPIO_Port, MOSFET_5V_Pin, GPIO_PIN_RESET);
+
+		  HAL_GPIO_WritePin(BOOST_GPIO_Port, BOOST_Pin, GPIO_PIN_RESET);
+		  HAL_Delay(333);
+		  HAL_GPIO_WritePin(BOOST_GPIO_Port, BOOST_Pin, GPIO_PIN_SET);
+		  mode = 4;
+    	  next_ping = uwTick + 20000;
+
+		  printf("Set mode to 4 active\n");
+
+	  } else if (mode == 0) {
+		  HAL_GPIO_WritePin(EMBEDDED_LED_GPIO_Port, EMBEDDED_LED_Pin, GPIO_PIN_RESET);
+		  HAL_GPIO_WritePin(MOSFET_5V_GPIO_Port, MOSFET_5V_Pin, GPIO_PIN_SET);
+
+		  HAL_GPIO_WritePin(BOOST_GPIO_Port, BOOST_Pin, GPIO_PIN_RESET);
+		  HAL_Delay(200);
+		  HAL_GPIO_WritePin(BOOST_GPIO_Port, BOOST_Pin, GPIO_PIN_SET);
+		  HAL_Delay(50);
+		  HAL_GPIO_WritePin(BOOST_GPIO_Port, BOOST_Pin, GPIO_PIN_RESET);
+		  HAL_Delay(200);
+		  HAL_GPIO_WritePin(BOOST_GPIO_Port, BOOST_Pin, GPIO_PIN_SET);
+		  mode = 3;
+
+		  printf("Set mode to 3 inactive\n");
+	  } else if ( mode == 4 ){
+	      if (uwTick >= next_ping) {
+			  HAL_GPIO_WritePin(BOOST_GPIO_Port, BOOST_Pin, GPIO_PIN_RESET);
+			  HAL_Delay(200);
+			  HAL_GPIO_WritePin(BOOST_GPIO_Port, BOOST_Pin, GPIO_PIN_SET);
+			  printf("ping\n");
+	    	  next_ping = uwTick + 20000;
+	      }
+
+	  }
 
       now = uwTick;
 
@@ -152,7 +191,7 @@ int main(void)
       }
 
       if (now >= next_blink) { // Every 500 ms
-          HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_4);
+//          HAL_GPIO_TogglePin(EMBEDDED_LED_GPIO_Port, EMBEDDED_LED_Pin);
           next_blink = now + 500;
       }
 
@@ -340,16 +379,34 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, EMBEDDED_LED_Pin|BOOST_Pin|MOSFET_5V_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : PA4 */
-  GPIO_InitStruct.Pin = GPIO_PIN_4;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+  /*Configure GPIO pin : EMBEDDED_LED_Pin */
+  GPIO_InitStruct.Pin = EMBEDDED_LED_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(EMBEDDED_LED_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : BOOST_Pin MOSFET_5V_Pin */
+  GPIO_InitStruct.Pin = BOOST_Pin|MOSFET_5V_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : TSWITCH_Pin */
+  GPIO_InitStruct.Pin = TSWITCH_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(TSWITCH_GPIO_Port, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_1_IRQn);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
@@ -357,7 +414,32 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
 
+    if (GPIO_Pin == TSWITCH_Pin) {
+        if (HAL_GPIO_ReadPin(TSWITCH_GPIO_Port, TSWITCH_Pin) == GPIO_PIN_SET) {
+            // Wystąpiło zbocze narastające (pin jest teraz HIGH)
+        	if( mode == 4 ){
+        		mode = 0;
+        		printf("Set mode to 0 deactivate\n");
+        	} else if (mode ==3) {
+        		mode = 1;
+        		printf("Set mode to 1 activate\n");
+        	}
+        } else {
+            // Wystąpiło zbocze opadające (pin jest teraz LOW)
+        }
+
+    }
+
+
+
+
+  /* NOTE: This function should not be modified, when the callback is needed,
+            the HAL_GPIO_EXTI_Callback could be implemented in the user file
+   */
+}
 /* USER CODE END 4 */
 
 /**

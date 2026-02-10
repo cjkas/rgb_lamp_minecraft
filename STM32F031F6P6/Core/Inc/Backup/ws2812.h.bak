@@ -18,8 +18,6 @@
 #ifndef __WS2812_H
 #define __WS2812_H
 
-#define LED_CNT 8
-
 // Buffer allocated will be twice this
 #define BUFFER_SIZE 24
 
