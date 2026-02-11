@@ -148,7 +148,7 @@ int main(void)
 
 
 	  if(mode == 1) {
-		  HAL_GPIO_WritePin(EMBEDDED_LED_GPIO_Port, EMBEDDED_LED_Pin, GPIO_PIN_SET);
+		  HAL_GPIO_WritePin(EMBEDDED_LED_GPIO_Port, EMBEDDED_LED_Pin, GPIO_PIN_RESET);
 		  HAL_GPIO_WritePin(MOSFET_5V_GPIO_Port, MOSFET_5V_Pin, GPIO_PIN_RESET);
 
 		  HAL_GPIO_WritePin(BOOST_GPIO_Port, BOOST_Pin, GPIO_PIN_RESET);
@@ -160,7 +160,7 @@ int main(void)
 		  printf("Set mode to 4 active\n");
 
 	  } else if (mode == 0) {
-		  HAL_GPIO_WritePin(EMBEDDED_LED_GPIO_Port, EMBEDDED_LED_Pin, GPIO_PIN_RESET);
+		  HAL_GPIO_WritePin(EMBEDDED_LED_GPIO_Port, EMBEDDED_LED_Pin, GPIO_PIN_SET);
 		  HAL_GPIO_WritePin(MOSFET_5V_GPIO_Port, MOSFET_5V_Pin, GPIO_PIN_SET);
 
 		  HAL_GPIO_WritePin(BOOST_GPIO_Port, BOOST_Pin, GPIO_PIN_RESET);
