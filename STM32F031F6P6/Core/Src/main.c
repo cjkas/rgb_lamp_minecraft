@@ -130,21 +130,18 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  printf("WS2812 Demo\n");
+//  printf("WS2812 Demo\n");
 
   ws2812_init(&ws2812, &htim3, TIM_CHANNEL_1, 8);
-  printf("WS2812 Demo1\n");
   zeroLedValues(&ws2812);
-  printf("WS2812 Demo2\n");
   ws2812_demos_set(&ws2812, 1);
-  printf("WS2812 Demo3\n");
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  uint32_t now = 0, next_blink = 500, next_tick = 1000, loop_count = 0, next_ping = 0;
-  printf("WS2812 Demo4\n");
-  while (1)
+  uint32_t now = 0, next_tick = 1000, loop_count = 0, next_ping = 0;
+    while (1)
   {
 
 	  if(mode == 1) {
@@ -156,8 +153,8 @@ int main(void)
 		  HAL_GPIO_WritePin(BOOST_GPIO_Port, BOOST_Pin, GPIO_PIN_SET);
 		  mode = 4;
     	  next_ping = uwTick + 20000;
-
-		  printf("Set mode to 4 active\n");
+    	  ws2812_demos_tick(&ws2812, 1);
+//		  printf("Set mode to 4 active\n");
 
 	  } else if (mode == 0) {
 //		  HAL_GPIO_WritePin(EMBEDDED_LED_GPIO_Port, EMBEDDED_LED_Pin, GPIO_PIN_SET);
@@ -172,8 +169,8 @@ int main(void)
 		  HAL_GPIO_WritePin(BOOST_GPIO_Port, BOOST_Pin, GPIO_PIN_SET);
 		  mode = 3;
 
-		  printf("Set mode to 3 inactive\n");
-		  printf("sleep\n");
+//		  printf("Set mode to 3 inactive\n");
+//		  printf("sleep\n");
 		  HAL_Delay(200);
 		  HAL_SuspendTick();
 		  HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_SLEEPENTRY_WFI);
@@ -184,22 +181,18 @@ int main(void)
 			  HAL_GPIO_WritePin(BOOST_GPIO_Port, BOOST_Pin, GPIO_PIN_RESET);
 			  HAL_Delay(200);
 			  HAL_GPIO_WritePin(BOOST_GPIO_Port, BOOST_Pin, GPIO_PIN_SET);
-			  printf("ping\n");
+//			  printf("ping\n");
 	    	  next_ping = uwTick + 20000;
 	      }
 	      now = uwTick;
 
 	      if (!(now % 10)) { // Just call every 10th loop
-	          ws2812_demos_tick(&ws2812);
+	          ws2812_demos_tick(&ws2812, 0);
 	      }
 
-	      if (now >= next_blink) { // Every 500 ms
-	//          HAL_GPIO_TogglePin(EMBEDDED_LED_GPIO_Port, EMBEDDED_LED_Pin);
-	          next_blink = now + 500;
-	      }
 
 	      if (now >= next_tick) {
-	          printf("Tick %lu (count = %lu dma = %lu dat = %lu)\n", now / 1000, loop_count, ws2812.dma_cbs, ws2812.dat_cbs);
+//	          printf("Tick %lu (count = %lu dma = %lu dat = %lu)\n", now / 1000, loop_count, ws2812.dma_cbs, ws2812.dat_cbs);
 	          loop_count = 0;
 	          next_tick = now + 1000;
 	      }
@@ -423,13 +416,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
         if (HAL_GPIO_ReadPin(TSWITCH_GPIO_Port, TSWITCH_Pin) == GPIO_PIN_SET) {
         	if( mode == 4 ){
         		mode = 0;
-        		printf("Set mode to 0 deactivate\n");
+//        		printf("Set mode to 0 deactivate\n");
         	} else if (mode ==3) {
         		mode = 1;
-        		printf("Set mode to 1 activate\n");
+//        		printf("Set mode to 1 activate\n");
         		HAL_ResumeTick();
         		SystemClock_Config();
-        		printf("Set mode to 1 activate\n");
+//        		printf("Set mode to 1 activate\n");
         	}
         }
 

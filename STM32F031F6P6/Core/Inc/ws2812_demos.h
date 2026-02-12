@@ -23,6 +23,6 @@
 
 
 void ws2812_demos_set(ws2812_handleTypeDef *ws2812, uint8_t demo);
-void ws2812_demos_tick(ws2812_handleTypeDef *ws2812);
-
+void ws2812_demos_tick(ws2812_handleTypeDef *ws2812, uint8_t reset);
+uint16_t get_random(uint16_t min, uint16_t max);
 #endif /* WS2812_DEMOS_H_ */

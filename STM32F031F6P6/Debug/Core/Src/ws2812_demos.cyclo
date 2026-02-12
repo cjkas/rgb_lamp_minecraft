@@ -1,2 +1,3 @@
-../Core/Src/ws2812_demos.c:44:6:ws2812_demos_set	1
-../Core/Src/ws2812_demos.c:48:6:ws2812_demos_tick	6
+../Core/Src/ws2812_demos.c:50:6:ws2812_demos_set	1
+../Core/Src/ws2812_demos.c:54:6:ws2812_demos_tick	6
+../Core/Src/ws2812_demos.c:94:10:get_random	1

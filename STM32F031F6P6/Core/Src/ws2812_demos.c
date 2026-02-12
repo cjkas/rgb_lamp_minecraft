@@ -24,28 +24,34 @@
 uint8_t active_demo = 0;
 
 const uint8_t led_line_colors[][3] = {
-        { 10, 10, 1 },
-        { 20, 20, 5 },
-        { 30, 30, 5 },
-        { 40, 40, 5 },
-        { 50, 50, 5 },
-        { 60, 60, 5 },
-        { 70, 70, 5 },
-        { 80, 80, 5 },
-        { 90, 90, 5 },
-        { 100, 100, 5 },
+        { 100, 101, 5 },
+		{ 101, 102, 5 },
+		{ 102, 103, 5 },
+		{ 103, 104, 5 },
+		{ 104, 105, 5 },
+		{ 105, 105, 5 },
+		{ 106, 106, 5 },
+		{ 107, 107, 5 },
+		{ 108, 108, 5 },
+		{ 109, 109, 5 },
         { 110, 110, 5 },
         { 120, 120, 5 },
         { 130, 130, 5 },
         { 140, 140, 5 },
-        { 150, 150, 5 }
+        { 150, 150, 5 },
+        { 140, 140, 5 },
+        { 130, 130, 5 },
+        { 120, 120, 5 },
+        { 110, 110, 5 },
+        { 100, 100, 5 }
+
 };
 
 void ws2812_demos_set(ws2812_handleTypeDef *ws2812, uint8_t demo) {
     active_demo = demo;
 }
 
-void ws2812_demos_tick(ws2812_handleTypeDef *ws2812) {
+void ws2812_demos_tick(ws2812_handleTypeDef *ws2812, uint8_t reset) {
 
     static const uint32_t led_interval = 10;
 
@@ -56,15 +62,23 @@ void ws2812_demos_tick(ws2812_handleTypeDef *ws2812) {
 
     uint32_t now = uwTick;
 
+//    if(reset == 1) {
+//    	line_led = 0;
+//    	line_count = 0;
+//    	line_color = 0;
+//    }
+
     switch (active_demo) {
     case WS2812_DEMO_LINE:
         if (now >= next_led) {
             //zeroLedValues(ws2812);
-            setLedValues(ws2812, line_led, led_line_colors[line_color][0], led_line_colors[line_color][1], led_line_colors[line_color][2]);
+        	uint16_t rand = get_random(30, 50);
+            setLedValues(ws2812, line_led, rand+50, rand+50, 5);
             ++line_led;
             ++line_count;
             if (line_count % 64 == 0)
                 ++line_color;
+
             if (line_color >= sizeof(led_line_colors) / sizeof(led_line_colors[0]))
                 line_color = 0;
             if (line_led >= ws2812->leds)
@@ -76,4 +90,10 @@ void ws2812_demos_tick(ws2812_handleTypeDef *ws2812) {
     default:
         // De nothing really
     }
+}
+uint16_t get_random(uint16_t min, uint16_t max) {
+    static uint32_t seed = 0;
+    seed ^= HAL_GetTick();
+    seed = seed * 1103515245 + 12345;
+    return min + ((uint16_t)(seed >> 16) % (max - min + 1));
 }
