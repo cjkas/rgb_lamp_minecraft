@@ -59,7 +59,7 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define LED_CNT 59
+#define LED_CNT 24
 #define EMBEDDED_LED_Pin GPIO_PIN_4
 #define EMBEDDED_LED_GPIO_Port GPIOA
 #define BOOST_Pin GPIO_PIN_5

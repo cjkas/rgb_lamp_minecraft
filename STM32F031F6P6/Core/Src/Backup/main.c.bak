@@ -93,7 +93,7 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
     }
 
 }
-volatile uint8_t mode = 0;
+volatile uint8_t mode = 3;
 /* USER CODE END 0 */
 
 /**
@@ -133,62 +133,82 @@ int main(void)
   printf("WS2812 Demo\n");
 
   ws2812_init(&ws2812, &htim3, TIM_CHANNEL_1, 8);
+  printf("WS2812 Demo1\n");
   zeroLedValues(&ws2812);
-
+  printf("WS2812 Demo2\n");
   ws2812_demos_set(&ws2812, 1);
-
+  printf("WS2812 Demo3\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  uint32_t now = 0, next_blink = 500, next_tick = 1000, loop_count = 0;
-
+  uint32_t now = 0, next_blink = 500, next_tick = 1000, loop_count = 0, next_ping = 0;
+  printf("WS2812 Demo4\n");
   while (1)
   {
-	  if(mode = 1) {
-		  HAL_GPIO_WritePin(EMBEDDED_LED_GPIO_Port, EMBEDDED_LED_Pin, GPIO_PIN_SET);
+
+	  if(mode == 1) {
+//		  HAL_GPIO_WritePin(EMBEDDED_LED_GPIO_Port, EMBEDDED_LED_Pin, GPIO_PIN_RESET);
 		  HAL_GPIO_WritePin(MOSFET_5V_GPIO_Port, MOSFET_5V_Pin, GPIO_PIN_RESET);
 
 		  HAL_GPIO_WritePin(BOOST_GPIO_Port, BOOST_Pin, GPIO_PIN_RESET);
-		  HAL_Delay(50);
+		  HAL_Delay(333);
 		  HAL_GPIO_WritePin(BOOST_GPIO_Port, BOOST_Pin, GPIO_PIN_SET);
-
-		  HAL_Delay(500);
 		  mode = 4;
-	  } else {
-		  HAL_GPIO_WritePin(EMBEDDED_LED_GPIO_Port, EMBEDDED_LED_Pin, GPIO_PIN_RESET);
+    	  next_ping = uwTick + 20000;
+
+		  printf("Set mode to 4 active\n");
+
+	  } else if (mode == 0) {
+//		  HAL_GPIO_WritePin(EMBEDDED_LED_GPIO_Port, EMBEDDED_LED_Pin, GPIO_PIN_SET);
 		  HAL_GPIO_WritePin(MOSFET_5V_GPIO_Port, MOSFET_5V_Pin, GPIO_PIN_SET);
 
 		  HAL_GPIO_WritePin(BOOST_GPIO_Port, BOOST_Pin, GPIO_PIN_RESET);
-		  HAL_Delay(50);
+		  HAL_Delay(200);
 		  HAL_GPIO_WritePin(BOOST_GPIO_Port, BOOST_Pin, GPIO_PIN_SET);
 		  HAL_Delay(50);
 		  HAL_GPIO_WritePin(BOOST_GPIO_Port, BOOST_Pin, GPIO_PIN_RESET);
-		  HAL_Delay(50);
+		  HAL_Delay(200);
 		  HAL_GPIO_WritePin(BOOST_GPIO_Port, BOOST_Pin, GPIO_PIN_SET);
-
-		  HAL_Delay(500);
 		  mode = 3;
+
+		  printf("Set mode to 3 inactive\n");
+		  printf("sleep\n");
+		  HAL_Delay(200);
+		  HAL_SuspendTick();
+		  HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+		  HAL_ResumeTick();
+
+	  } else if ( mode == 4 ){
+	      if (uwTick >= next_ping) {
+			  HAL_GPIO_WritePin(BOOST_GPIO_Port, BOOST_Pin, GPIO_PIN_RESET);
+			  HAL_Delay(200);
+			  HAL_GPIO_WritePin(BOOST_GPIO_Port, BOOST_Pin, GPIO_PIN_SET);
+			  printf("ping\n");
+	    	  next_ping = uwTick + 20000;
+	      }
+	      now = uwTick;
+
+	      if (!(now % 10)) { // Just call every 10th loop
+	          ws2812_demos_tick(&ws2812);
+	      }
+
+	      if (now >= next_blink) { // Every 500 ms
+	//          HAL_GPIO_TogglePin(EMBEDDED_LED_GPIO_Port, EMBEDDED_LED_Pin);
+	          next_blink = now + 500;
+	      }
+
+	      if (now >= next_tick) {
+	          printf("Tick %lu (count = %lu dma = %lu dat = %lu)\n", now / 1000, loop_count, ws2812.dma_cbs, ws2812.dat_cbs);
+	          loop_count = 0;
+	          next_tick = now + 1000;
+	      }
+
+	      ++loop_count;
+
 	  }
 
-      now = uwTick;
 
-      if (!(now % 10)) { // Just call every 10th loop
-          ws2812_demos_tick(&ws2812);
-      }
-
-      if (now >= next_blink) { // Every 500 ms
-//          HAL_GPIO_TogglePin(EMBEDDED_LED_GPIO_Port, EMBEDDED_LED_Pin);
-          next_blink = now + 500;
-      }
-
-      if (now >= next_tick) {
-          printf("Tick %lu (count = %lu dma = %lu dat = %lu)\n", now / 1000, loop_count, ws2812.dma_cbs, ws2812.dat_cbs);
-          loop_count = 0;
-          next_tick = now + 1000;
-      }
-
-      ++loop_count;
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -214,7 +234,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL12;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL5;
   RCC_OscInitStruct.PLL.PREDIV = RCC_PREDIV_DIV1;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -229,7 +249,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
   {
     Error_Handler();
   }
@@ -364,25 +384,14 @@ static void MX_GPIO_Init(void)
   /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, EMBEDDED_LED_Pin|BOOST_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, EMBEDDED_LED_Pin|BOOST_Pin|MOSFET_5V_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(MOSFET_5V_GPIO_Port, MOSFET_5V_Pin, GPIO_PIN_SET);
-
-  /*Configure GPIO pin : EMBEDDED_LED_Pin */
-  GPIO_InitStruct.Pin = EMBEDDED_LED_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(EMBEDDED_LED_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : BOOST_Pin MOSFET_5V_Pin */
-  GPIO_InitStruct.Pin = BOOST_Pin|MOSFET_5V_Pin;
+  /*Configure GPIO pins : EMBEDDED_LED_Pin BOOST_Pin MOSFET_5V_Pin */
+  GPIO_InitStruct.Pin = EMBEDDED_LED_Pin|BOOST_Pin|MOSFET_5V_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -391,7 +400,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : TSWITCH_Pin */
   GPIO_InitStruct.Pin = TSWITCH_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(TSWITCH_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
@@ -406,13 +415,23 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-  /* Prevent unused argument(s) compilation warning */
-	mode = mode == 4 ? 0 : 1;
 
-  /* NOTE: This function should not be modified, when the callback is needed,
-            the HAL_GPIO_EXTI_Callback could be implemented in the user file
-   */
+    if (GPIO_Pin == TSWITCH_Pin) {
+        if (HAL_GPIO_ReadPin(TSWITCH_GPIO_Port, TSWITCH_Pin) == GPIO_PIN_SET) {
+        	if( mode == 4 ){
+        		mode = 0;
+        		printf("Set mode to 0 deactivate\n");
+        	} else if (mode ==3) {
+        		mode = 1;
+        		printf("Set mode to 1 activate\n");
+        		HAL_ResumeTick();
+        		printf("Set mode to 1 activate\n");
+        	}
+        }
+
+    }
 }
+
 /* USER CODE END 4 */
 
 /**
